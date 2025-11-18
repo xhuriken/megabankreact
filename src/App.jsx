@@ -2,28 +2,28 @@ import "./App.css";
 import Home from "./pages/Home";
 
 // Background tuning
-const BG_BLUR_CLASS = "blur-[2px]";     // Change blur here (e.g. 'blur-none', 'blur-sm', 'blur-md')
-const BG_DARK_OVERLAY_CLASS = "bg-black/60"; // Change darkness here (e.g. 'bg-black/40', 'bg-black/80')
+const BG_BLUR_CLASS = "blur-[2px]";     // this is the blur (change it too)
+const BG_DARK_OVERLAY_CLASS = "bg-black/60"; //This is the brighness of the background (change it if it's ugly)
 
 function App() {
   return (
     <div className="min-h-screen text-text">
-      {/* Root background wrapper */}
+      {/* background */}
       <div className="relative min-h-screen overflow-hidden bg-bg">
-        {/* Background image layer */}
+        {/* Background image */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <img
             src="/Background.png"
             alt="Mega Bank background"
             className={`h-full w-full object-cover ${BG_BLUR_CLASS}`}
           />
-          {/* Dark overlay on top of the image */}
+          {/* Dark overlay */}
           <div className={`absolute inset-0 ${BG_DARK_OVERLAY_CLASS}`} />
         </div>
 
-        {/* Main content container */}
+        {/* Main content */}
         <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-6 md:px-8 md:py-10">
-          {/* Top navigation */}
+          {/* navigation TODO: put it in component and upgrade style*/}
           <header className="mb-10 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-bold shadow-[0_0_25px_rgba(110,84,188,0.8)]">
@@ -55,7 +55,7 @@ function App() {
             <Home />
           </main>
 
-          {/* Footer */}
+          {/* Footer TODO: put it in component and upgrade style */}
           <footer className="mt-10 border-t border-white/5 pt-4 text-[10px] text-text-muted md:text-xs">
             <p>© {new Date().getFullYear()} MEGA BANK. Tous droits réservés.</p>
           </footer>

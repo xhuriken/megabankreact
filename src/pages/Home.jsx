@@ -5,14 +5,14 @@ export default function Home() {
     <section className="flex flex-col gap-10 md:flex-row md:items-center">
       {/* Left column: hero and feature bullets */}
       <div className="flex-1 space-y-7">
-        {/* Small badge */}
+        {/* Small stylized text for fun */}
         <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-surface/60 px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-text-muted backdrop-blur-sm">
           <span className="h-1.5 w-1.5 rounded-full bg-accent animate-ping" />
           <span className="h-1.5 w-1.5 rounded-full bg-accent" />
           Mega Bank • Banque en ligne
         </div>
 
-        {/* Heading */}
+        {/* Head */}
         <div className="space-y-3">
           <h1 className="text-3xl font-semibold leading-tight md:text-4xl">
             Level up ton argent
@@ -22,7 +22,7 @@ export default function Home() {
             </span>
           </h1>
 
-          {/* Description: explain Bonk system */}
+          {/* Description*/}
           <p className="max-w-xl text-sm text-text-muted md:text-base">
             Chez MEGA BANK, tu ne stockes pas des euros mais des Bonk :
             <br />
@@ -33,7 +33,7 @@ export default function Home() {
           </p>
         </div>
 
-        {/* CTA buttons */}
+        {/* Buttons */}
         <div className="flex flex-wrap gap-3 pt-1">
           <button className="cursor-pointer rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white shadow-[0_0_35px_rgba(110,84,188,0.7)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_55px_rgba(110,84,188,1)]">
             Ouvrir un compte Bonk
@@ -99,13 +99,13 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Right column: stylized account card */}
+      {/* Right : PREVIEW */}
       <div className="relative flex-1">
-        {/* Floating glow behind the card */}
+        {/* Glow behind */}
         <div className="pointer-events-none absolute inset-x-6 bottom-0 h-40 rounded-full bg-primary-dark/80 blur-3xl" />
 
         <div className="group relative rounded-3xl border border-white/10 bg-surface/90 p-4 shadow-[0_25px_80px_rgba(0,0,0,0.9)] backdrop-blur-sm transition-transform duration-300 hover:-translate-y-1">
-          {/* Top pill label */}
+          {/* Top label */}
           <div className="mb-4 flex items-center justify-between rounded-full bg-gradient-to-r from-primary-dark via-primary to-secondary px-4 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-text shadow-[0_0_25px_rgba(110,84,188,0.9)]">
             <span>Aperçu du compte</span>
             <span className="text-[9px] text-text">
@@ -137,7 +137,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Transfers & beneficiaries row */}
+            {/* Transfers and beneficiaries row */}
             <div className="flex gap-3 text-[11px]">
               <div className="flex-1 rounded-xl border border-white/10 bg-surface/90 px-3 py-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.6)] transition duration-200 group-hover:border-primary-soft/80">
                 <div className="mb-1 flex items-center justify-between">
