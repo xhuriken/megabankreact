@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import Account from "./Account";
 
 // Sample mock data for demo. Replace with real data (props / API) as needed.
 const sampleAccounts = [
@@ -12,7 +13,7 @@ const sampleAccounts = [
     id: "acc-2",
     name: "Épargne",
     balance: 1500.0,
-    lastTransaction: { label: "Virement vers Épargne", amount: -150.0, type: "debit", date: "2025-11-10" },
+    lastTransaction: { label: "Virement vers Épargne", amount: 420.0, type: "credit", date: "2025-11-10" },
   },
   {
     id: "acc-3",
@@ -25,7 +26,7 @@ const sampleAccounts = [
 const sampleBeneficiaries = [
   { id: "b-1", name: "Alice", note: "Amie", handle: "alice01" },
   { id: "b-2", name: "Bob", note: "Coloc", handle: "bob-room" },
-  { id: "b-3", name: "Sophie", note: "Maman", handle: "sophie-m" },
+  { id: "b-3", name: "Sophie Rain", note: "Maman", handle: "sophie-m" },
 ];
 
 function formatBalance(value) {
@@ -33,11 +34,19 @@ function formatBalance(value) {
 }
 
 export default function Dashboard({ accounts = sampleAccounts, beneficiaries = sampleBeneficiaries }) {
+  const [selectedAccount, setSelectedAccount] = useState(null);
+
+  // If an account is selected, show the account detail page
+  if (selectedAccount) {
+    return <Account account={selectedAccount} onBack={() => setSelectedAccount(null)} />;
+  }
+
   // ensure we show at least 1 and at most 5 accounts
   const visibleAccounts = (accounts && accounts.length > 0) ? accounts.slice(0, 5) : sampleAccounts.slice(0, 1);
   const primary = visibleAccounts[0] || null;
-  // fill up to exactly 5 slots for the small cards (may include primary again)
-  const slots = Array.from({ length: 5 }).map((_, i) => visibleAccounts[i] || null);
+  // secondary accounts — up to 4 (slots will be filled with placeholders if missing)
+  const secondary = visibleAccounts.slice(1, 5);
+  const slots = Array.from({ length: 4 }).map((_, i) => secondary[i] || null);
 
   return (
     <section className="mx-auto max-w-4xl">
@@ -47,7 +56,10 @@ export default function Dashboard({ accounts = sampleAccounts, beneficiaries = s
       {/* Primary account (large, centered) */}
       <div className="flex justify-center mb-6">
         {primary ? (
-          <article className="w-full max-w-2xl rounded-3xl border border-white/10 bg-surface/95 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.65)] transform transition-transform duration-200 hover:-translate-y-1">
+          <article
+            onClick={() => setSelectedAccount(primary)}
+            className="w-full max-w-2xl rounded-3xl border border-white/10 bg-surface/95 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.65)] transform transition-transform duration-200 hover:-translate-y-1 cursor-pointer"
+          >
             <div className="flex items-center justify-between gap-4">
               <div>
                 <div className="text-sm uppercase tracking-wide text-text-muted">{primary.name} (Principal)</div>
@@ -71,8 +83,8 @@ export default function Dashboard({ accounts = sampleAccounts, beneficiaries = s
         )}
       </div>
 
-      {/* Small cards row: exactly 5 slots (placeholders if empty) */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-5">
+      {/* Secondary small cards row: exactly 4 slots (placeholders if empty) */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
         {slots.map((acc, idx) => (
           <article
             key={idx}
@@ -80,12 +92,17 @@ export default function Dashboard({ accounts = sampleAccounts, beneficiaries = s
             {acc ? (
               <div className="flex flex-col h-full justify-between">
                 <div>
-                  <div className="text-xs uppercase tracking-wide text-text-muted">{acc.name}{idx === 0 ? " • Principal" : ""}</div>
+                  <div className="text-xs uppercase tracking-wide text-text-muted">{acc.name}</div>
                   <div className="mt-2 text-xl font-semibold">{formatBalance(acc.balance)} Ⓑ</div>
                 </div>
-                <div className="mt-4 text-[12px] text-text-muted">
-                  <div className={`inline-block px-2 py-1 rounded-full ${acc.lastTransaction.type === "credit" ? "bg-emerald-700 text-emerald-100" : "bg-red-700 text-red-100"}`}>{acc.lastTransaction.label}</div>
-                  <div className="mt-1 text-[11px]">{acc.lastTransaction.date}</div>
+                <div className="mt-4">
+                    <div className="mt-2 text-[11px] text-text-muted capitalize">{acc.lastTransaction.type}</div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-[12px] text-text-muted">{acc.lastTransaction.label}</div>
+                    <div className={`text-lg font-semibold ${acc.lastTransaction.type === "credit" ? "text-emerald-300" : "text-red-300"}`}>
+                      {acc.lastTransaction.type === "credit" ? "+" : "-"}{Math.abs(acc.lastTransaction.amount).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} Ⓑ
+                    </div>
+                  </div>
                 </div>
               </div>
             ) : (

@@ -4,6 +4,7 @@ import Login from "./components/Login";
 import Dashboard from "./pages/Dashboard";
 import Footer from "./components/Footer";
 import NavBar from "./components/NavBar";
+import Account from "./pages/Account";
 
 // Background tuning
 const BG_BLUR_CLASS = "blur-[2px]";     // this is the blur (change it too)
