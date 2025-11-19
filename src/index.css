@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+@theme {
+  --color-bg: #05040b;              /* Global background */
+  --color-surface: #0b071a;         /* Panels / cards */
+  --color-primary: #6e54bc;         /* Main purple */
+  --color-primary-soft: #8c6ff0;    /* Soft purple for accents */
+  --color-primary-dark: #1b1338;    /* Deep purple */
+  --color-secondary: #3c4178;       /* Blue accent */
+  --color-accent: #d88636;          /* Orange accent */
+  --color-text: #f4f2ff;            /* Main text */
+  --color-text-muted: #a4a4c9;      /* Muted text */
+}

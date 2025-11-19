@@ -1,24 +1,51 @@
-# Logs
-logs
-*.log
+#thanks AI
+
+# Dépendances
+/node_modules
+/.pnp
+.pnp.js
+
+# build ou artefacts de production
+/build
+/dist
+/out
+
+# Informations sur l'exécution
+.npm
+.yarn-integrity
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Fichiers de log, cache et autres
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
 lerna-debug.log*
+# Logs V8 start-up (si vous utilisez le profiling)
+v8*.log
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# Dossiers de cache et temporaires
+.cache
+.tmp
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+*.seed
+*.log
+*.diff
+*.patch
+
+# Fichiers spécifiques au système d'exploitation et aux éditeurs
+# macOS
+.DS_Store
+# Windows
+Thumbs.db
+
+# Fichiers spécifiques à certains outils de React/JavaScript
+# Create React App (CRA)
+.web-cache
+
+# Fichiers spécifiques à l'IDE (exemples)
+.idea/
+.vscode/
+*.swp
