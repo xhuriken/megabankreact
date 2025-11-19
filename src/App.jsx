@@ -1,6 +1,7 @@
 import "./App.css";
 import Home from "./pages/Home";
 import Login from "./components/Login";
+import Dashboard from "./pages/Dashboard";
 import Footer from "./components/Footer";
 import NavBar from "./components/NavBar";
 
@@ -31,7 +32,7 @@ function App() {
 
           {/* Page content */}
           <main className="flex-1">
-            <Home />
+            <Dashboard />
           </main>
           {/* Footer*/}
           <Footer />
