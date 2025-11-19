@@ -1,8 +1,10 @@
 import "./App.css";
 import Home from "./pages/Home";
-import Login from "./components/Login";
+import Auth from "./pages/Auth";
 import Footer from "./components/Footer";
 import NavBar from "./components/NavBar";
+
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // Background tuning
 const BG_BLUR_CLASS = "blur-[2px]";     // this is the blur (change it too)
@@ -31,7 +33,13 @@ function App() {
 
           {/* Page content */}
           <main className="flex-1">
-            <Home />
+            <Routes>
+              {/* Default*/}
+              <Route path="/" element={<Home />} />
+
+              {/* Auth */}
+              <Route path="/auth" element={<Auth />} />
+            </Routes>
           </main>
           {/* Footer*/}
           <Footer />

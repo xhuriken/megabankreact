@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 
-export default function LoginPage() {
+export default function LoginRegister() {
   const [isSignUp, setIsSignUp] = useState(false);
   const toggleForm = () => setIsSignUp(!isSignUp);
 
   return (
-    <div className="relative max-w-4xl w-full h-[520px] mx-auto mt-20">
+    <div className="relative max-w-4xl w-full h-[520px] mx-auto mt-5">
       {/* Glow derrière */}
       <div className="pointer-events-none absolute inset-x-10 bottom-0 h-40 rounded-full bg-primary-dark/80 blur-3xl" />
 
@@ -25,15 +25,15 @@ export default function LoginPage() {
           <input
             type="email"
             placeholder="Adresse email"
-            className="mb-4 w-full rounded-xl bg-surface/40 border border-white/10 p-3 text-sm text-text focus:border-primary-soft outline-none"
+            className="mb-4 w-full rounded-xl bg-surface/40 border border-white/10 p-3 text-sm text-text transition-all duration-300 focus:border-primary-soft outline-none "
           />
           <input
             type="password"
             placeholder="Mot de passe"
-            className="mb-6 w-full rounded-xl bg-surface/40 border border-white/10 p-3 text-sm text-text focus:border-primary-soft outline-none"
+            className="mb-6 w-full rounded-xl bg-surface/40 border border-white/10 p-3 text-sm text-text transition-all duration-300 focus:border-primary-soft outline-none"
           />
 
-          <button className="cursor-pointer rounded-xl bg-primary px-5 py-3 text-sm font-medium text-white shadow-[0_0_35px_rgba(110,84,188,0.7)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_55px_rgba(110,84,188,1)]">
+          <button className="cursor-pointer rounded-xl bg-primary px-5 py-3 text-sm font-medium text-white shadow-[0_0_15px_rgba(110,84,188,0.7)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_35px_rgba(110,84,188,1)]">
             Se connecter
           </button>
         </div>
@@ -51,17 +51,17 @@ export default function LoginPage() {
           <input
             type="text"
             placeholder="Nom complet"
-            className="mb-4 w-full rounded-xl bg-surface/40 border border-white/10 p-3 text-sm text-text focus:border-primary-soft outline-none"
+            className="mb-4 w-full rounded-xl bg-surface/40 border border-white/10 p-3 text-sm transition-all duration-300 text-text focus:border-primary-soft outline-none"
           />
           <input
             type="email"
             placeholder="Adresse email"
-            className="mb-4 w-full rounded-xl bg-surface/40 border border-white/10 p-3 text-sm text-text focus:border-primary-soft outline-none"
+            className="mb-4 w-full rounded-xl bg-surface/40 border border-white/10 p-3 text-sm transition-all duration-300 text-text focus:border-primary-soft outline-none"
           />
           <input
             type="password"
             placeholder="Mot de passe"
-            className="mb-6 w-full rounded-xl bg-surface/40 border border-white/10 p-3 text-sm text-text focus:border-primary-soft outline-none"
+            className="mb-6 w-full rounded-xl bg-surface/40 border border-white/10 p-3 text-sm transition-all duration-300 text-text focus:border-primary-soft outline-none"
           />
 
           <button className="cursor-pointer rounded-xl bg-secondary px-5 py-3 text-sm font-medium text-white shadow-[0_0_35px_rgba(110,84,188,0.7)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_55px_rgba(110,84,188,1)]">
@@ -80,9 +80,9 @@ export default function LoginPage() {
           `}
         >
           <h1 className="text-2xl font-semibold mb-3 tracking-[0.15em] uppercase">
-            {isSignUp ? "Déjà membre ?" : "Nouveau chez Mega Bank ?"}
+            {isSignUp ? "Déjà membre ?" : "Nouveau chez nous?"}
           </h1>
-          <p className="text-sm text-white/80 max-w-xs text-center mb-6">
+          <p className="text-md text-white/80 max-w-xs text-center mb-6">
             {isSignUp
               ? "Connecte-toi pour accéder à tes comptes Bonk."
               : "Crée ton compte pour rejoindre la banque du futur."}

@@ -1,6 +1,15 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Home() {
+  const navigate = useNavigate();
+
+
+    const goToAuth = () => {
+      navigate("/auth"); 
+    };
+
+
   return (
     <section className="flex min-h-[calc(75vh)] items-center justify-center flex-col gap-10 md:flex-row md:items-center">
       {/* Left column: hero and feature bullets */}
@@ -29,7 +38,8 @@ export default function Home() {
 
         {/* Buttons */}
         <div className="flex flex-wrap gap-3 pt-1">
-          <button className="cursor-pointer rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white shadow-[0_0_35px_rgba(110,84,188,0.7)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_55px_rgba(110,84,188,1)]">
+          <button className="cursor-pointer rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white shadow-[0_0_35px_rgba(110,84,188,0.7)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_55px_rgba(110,84,188,1)]"
+          onClick={goToAuth}>
             Ouvrir un compte Bonk
           </button>
           <button className="cursor-pointer rounded-xl border border-white/15 bg-surface/70 px-5 py-2.5 text-sm font-medium text-text-muted backdrop-blur-sm transition-colors hover:border-primary-soft hover:text-text">
