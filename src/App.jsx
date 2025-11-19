@@ -25,7 +25,7 @@ function App() {
         </div>
 
         {/* Main content */}
-        <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-6 md:px-8 md:py-10">
+        <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-3 md:px-8 md:py-6">
           {/* nav*/}
           <NavBar />
 

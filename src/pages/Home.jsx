@@ -5,12 +5,6 @@ export default function Home() {
     <section className="flex flex-col gap-10 md:flex-row md:items-center">
       {/* Left column: hero and feature bullets */}
       <div className="flex-1 space-y-7">
-        {/* Small stylized text for fun */}
-        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-surface/60 px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-text-muted backdrop-blur-sm">
-          <span className="h-1.5 w-1.5 rounded-full bg-accent animate-ping" />
-          <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-          Mega Bank • Banque en ligne
-        </div>
 
         {/* Head */}
         <div className="space-y-3">

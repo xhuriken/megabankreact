@@ -17,14 +17,17 @@ export default function LoginPage() {
             </div>
 
             <nav className="flex items-center gap-4 text-xs md:text-sm">
-              <button className="cursor-pointer text-text-muted transition-colors hover:text-text">
-                Sécurité
+              {/* <button className="cursor-pointer text-text-muted transition-colors hover:text-text">
+                test
               </button>
               <button className="cursor-pointer text-text-muted transition-colors hover:text-text">
-                Tarifs
-              </button>
+                Test
+              </button> */}
               <button className="cursor-pointer rounded-full border border-white/10 px-3 py-1.5 text-xs font-medium text-text-muted backdrop-blur-sm transition-colors hover:border-primary-soft hover:text-text">
                 Connexion
+              </button>
+              <button className="cursor-pointer rounded-full  bg-primary px-3 py-1.5 text-xs  font-medium text-white shadow-[0_0_35px_rgba(110,84,188,0.7)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_55px_rgba(110,84,188,1)]">
+                Ouvrir un compte Bonk
               </button>
             </nav>
         </header>
