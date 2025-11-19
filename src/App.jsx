@@ -26,7 +26,7 @@ function App() {
 
         {/* Main content */}
         <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-6 md:px-8 md:py-10">
-          {/* navigation TODO: put it in component and upgrade style*/}
+          {/* nav*/}
           <NavBar />
 
           {/* Page content */}
@@ -36,7 +36,7 @@ function App() {
 
           </main>
 
-          {/* Footer TODO: put it in component and upgrade style */}
+          {/* Footer*/}
           <Footer />
         </div>
       </div>
