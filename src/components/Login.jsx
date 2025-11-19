@@ -2,59 +2,101 @@ import React, { useState } from "react";
 
 export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
-
   const toggleForm = () => setIsSignUp(!isSignUp);
 
   return (
-    <div className="relative w-full max-w-4xl h-[500px] mx-auto mt-20 shadow-xl overflow-hidden rounded-xl">
+    <div className="relative max-w-4xl w-full h-[520px] mx-auto mt-20">
+      {/* Glow derrière */}
+      <div className="pointer-events-none absolute inset-x-10 bottom-0 h-40 rounded-full bg-primary-dark/80 blur-3xl" />
 
-      {/* Formulaire Sign In */}
-      <div
-        className={`absolute top-0 left-0 w-1/2 h-full bg-white p-10 flex flex-col justify-center items-center transition-transform duration-700 ${
-          isSignUp ? "-translate-x-full opacity-0" : "translate-x-0 opacity-100"
-        }`}
-      >
-        <h1 className="text-3xl font-bold mb-4">Sign In</h1>
-        <input type="email" placeholder="Email" className="mb-4 p-2 border rounded w-full" />
-        <input type="password" placeholder="Password" className="mb-4 p-2 border rounded w-full" />
-        <button className="bg-blue-600 text-white px-6 py-2 rounded">Sign In</button>
-      </div>
-
-      {/* Formulaire Sign Up */}
-      <div
-        className={`absolute top-0 right-0 w-1/2 h-full bg-gray-100 p-10 flex flex-col justify-center items-center transition-transform duration-700 ${
-          isSignUp ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
-        }`}
-      >
-        <h1 className="text-3xl font-bold mb-4">Sign Up</h1>
-        <input type="text" placeholder="Name" className="mb-4 p-2 border rounded w-full" />
-        <input type="email" placeholder="Email" className="mb-4 p-2 border rounded w-full" />
-        <input type="password" placeholder="Password" className="mb-4 p-2 border rounded w-full" />
-        <button className="bg-green-600 text-white px-6 py-2 rounded">Sign Up</button>
-      </div>
-
-      {/* Panneau bleu toggle */}
-      <div
-        className={`absolute top-0 left-1/2 w-1/2 h-full bg-blue-500 text-white flex flex-col justify-center items-center transition-transform duration-700 ${
-          isSignUp ? "-translate-x-2/2" : "translate-x-0"
-        }`}
-      >
-        <h1 className="text-3xl font-bold mb-4">
-          {isSignUp ? "Welcome Back!" : "Hello, Friend!"}
-        </h1>
-        <p className="mb-6 text-center px-4">
-          {isSignUp
-            ? "Enter your personal details to sign in"
-            : "Register with your personal details to sign up"}
-        </p>
-        <button
-          className="border-2 border-white px-6 py-2 rounded hover:bg-white hover:text-blue-500 transition-colors"
-          onClick={toggleForm}
+      {/* Container principal */}
+      <div className="relative w-full h-full overflow-hidden rounded-3xl border border-white/10 bg-surface/80 backdrop-blur-sm shadow-[0_25px_80px_rgba(0,0,0,0.9)]">
+        
+        {/* SIGN IN */}
+        <div
+          className={`absolute inset-y-0 left-0 w-1/2 p-10 flex flex-col justify-center transition-all duration-700 ${
+            isSignUp
+              ? "-translate-x-full opacity-0"
+              : "translate-x-0 opacity-100"
+          }`}
         >
-          {isSignUp ? "Sign In" : "Sign Up"}
-        </button>
-      </div>
+          <h1 className="text-3xl font-semibold mb-6">Connexion</h1>
 
+          <input
+            type="email"
+            placeholder="Adresse email"
+            className="mb-4 w-full rounded-xl bg-surface/40 border border-white/10 p-3 text-sm text-text focus:border-primary-soft outline-none"
+          />
+          <input
+            type="password"
+            placeholder="Mot de passe"
+            className="mb-6 w-full rounded-xl bg-surface/40 border border-white/10 p-3 text-sm text-text focus:border-primary-soft outline-none"
+          />
+
+          <button className="cursor-pointer rounded-xl bg-primary px-5 py-3 text-sm font-medium text-white shadow-[0_0_35px_rgba(110,84,188,0.7)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_55px_rgba(110,84,188,1)]">
+            Se connecter
+          </button>
+        </div>
+
+        {/* SIGN UP */}
+        <div
+          className={`absolute inset-y-0 right-0 w-1/2 p-10 flex flex-col justify-center transition-all duration-700 ${
+            isSignUp
+              ? "translate-x-0 opacity-100"
+              : "translate-x-full opacity-0"
+          }`}
+        >
+          <h1 className="text-3xl font-semibold mb-6">Créer un compte</h1>
+
+          <input
+            type="text"
+            placeholder="Nom complet"
+            className="mb-4 w-full rounded-xl bg-surface/40 border border-white/10 p-3 text-sm text-text focus:border-primary-soft outline-none"
+          />
+          <input
+            type="email"
+            placeholder="Adresse email"
+            className="mb-4 w-full rounded-xl bg-surface/40 border border-white/10 p-3 text-sm text-text focus:border-primary-soft outline-none"
+          />
+          <input
+            type="password"
+            placeholder="Mot de passe"
+            className="mb-6 w-full rounded-xl bg-surface/40 border border-white/10 p-3 text-sm text-text focus:border-primary-soft outline-none"
+          />
+
+          <button className="cursor-pointer rounded-xl bg-secondary px-5 py-3 text-sm font-medium text-white shadow-[0_0_35px_rgba(110,84,188,0.7)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_55px_rgba(110,84,188,1)]">
+            Créer un compte Bonk
+          </button>
+        </div>
+
+        {/* PANNEAU TOGGLE */}
+        <div
+          className={`
+            absolute inset-y-0 left-1/2 w-1/2 
+            bg-gradient-to-b from-primary-dark via-primary to-secondary
+            text-white flex flex-col justify-center items-center
+            transition-transform duration-700 shadow-[0_0_35px_rgba(110,84,188,0.8)]
+            ${isSignUp ? "-translate-x-full" : "translate-x-0"}
+          `}
+        >
+          <h1 className="text-2xl font-semibold mb-3 tracking-[0.15em] uppercase">
+            {isSignUp ? "Déjà membre ?" : "Nouveau chez Mega Bank ?"}
+          </h1>
+          <p className="text-sm text-white/80 max-w-xs text-center mb-6">
+            {isSignUp
+              ? "Connecte-toi pour accéder à tes comptes Bonk."
+              : "Crée ton compte pour rejoindre la banque du futur."}
+          </p>
+
+          <button
+            onClick={toggleForm}
+            className="cursor-pointer rounded-xl border border-white/30 bg-black/20 px-5 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white hover:text-primary"
+          >
+            {isSignUp ? "Se connecter" : "Créer un compte"}
+          </button>
+        </div>
+
+      </div>
     </div>
   );
 }
