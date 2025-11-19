@@ -2,7 +2,7 @@ import React from "react";
 
 export default function Home() {
   return (
-    <section className="flex flex-col gap-10 md:flex-row md:items-center">
+    <section className="flex min-h-[calc(75vh)] items-center justify-center flex-col gap-10 md:flex-row md:items-center">
       {/* Left column: hero and feature bullets */}
       <div className="flex-1 space-y-7">
 

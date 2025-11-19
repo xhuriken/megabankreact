@@ -32,10 +32,7 @@ function App() {
           {/* Page content */}
           <main className="flex-1">
             <Home />
-            <Login />
-
           </main>
-
           {/* Footer*/}
           <Footer />
         </div>
