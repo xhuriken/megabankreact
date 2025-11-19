@@ -1,10 +1,36 @@
-import React, { useState } from "react";
-
+import React, { useState, useEffect } from "react";
 export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const toggleForm = () => setIsSignUp(!isSignUp);
+  
+  const [data, setData] = useState('');
+
+  useEffect(() => {
+    // 1. Définir l'URL du backend
+    fetch('http://127.0.0.1:8000/docs#/auth/register_auth_register_post')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Erreur réseau ou réponse non-OK');
+          }
+          return response.json(); // 2. Parser le corps de la réponse en JSON
+        })
+        .then(data => {
+          setData(data.message); // 3. Utiliser les données
+        })
+        .catch(error => {
+          console.error("Échec de la communication API :", error);
+          setData('Erreur de connexion.');
+        });
+    }, []);
+
+  
+    <div>
+      <p>Message reçu : {data}</p>
+    </div>
+  
 
   return (
+    
     <div className="relative max-w-4xl w-full h-[520px] mx-auto mt-20">
       {/* Glow derrière */}
       <div className="pointer-events-none absolute inset-x-10 bottom-0 h-40 rounded-full bg-primary-dark/80 blur-3xl" />
@@ -15,6 +41,7 @@ export default function LoginPage() {
         {/* SIGN IN */}
         <div
           className={`absolute inset-y-0 left-0 w-1/2 p-10 flex flex-col justify-center transition-all duration-700 ${
+            
             isSignUp
               ? "-translate-x-full opacity-0"
               : "translate-x-0 opacity-100"
@@ -47,6 +74,7 @@ export default function LoginPage() {
           }`}
         >
           <h1 className="text-3xl font-semibold mb-6">Créer un compte</h1>
+          <p>Message reçu : {data}</p>
 
           <input
             type="text"
