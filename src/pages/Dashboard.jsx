@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Account from "./Account";
+import AddBeneficiary from "./AddBeneficiary";
 
 // Sample mock data for demo. Replace with real data (props / API) as needed.
 const sampleAccounts = [
@@ -35,14 +36,30 @@ function formatBalance(value) {
 
 export default function Dashboard({ accounts = sampleAccounts, beneficiaries = sampleBeneficiaries }) {
   const [selectedAccount, setSelectedAccount] = useState(null);
+  const [isAddingBeneficiary, setIsAddingBeneficiary] = useState(false);
+  const [accountsState, setAccountsState] = useState(accounts);
+  const [beneficiariesState, setBeneficiariesState] = useState(beneficiaries);
 
   // If an account is selected, show the account detail page
   if (selectedAccount) {
     return <Account account={selectedAccount} onBack={() => setSelectedAccount(null)} />;
   }
 
+  // If adding a beneficiary, show the add form
+  if (isAddingBeneficiary) {
+    return (
+      <AddBeneficiary
+        onBack={() => setIsAddingBeneficiary(false)}
+        onAdd={(b) => {
+          setBeneficiariesState((prev) => [b, ...prev]);
+          setIsAddingBeneficiary(false);
+        }}
+      />
+    );
+  }
+
   // ensure we show at least 1 and at most 5 accounts
-  const visibleAccounts = (accounts && accounts.length > 0) ? accounts.slice(0, 5) : sampleAccounts.slice(0, 1);
+  const visibleAccounts = (accountsState && accountsState.length > 0) ? accountsState.slice(0, 5) : sampleAccounts.slice(0, 1);
   const primary = visibleAccounts[0] || null;
   // secondary accounts — up to 4 (slots will be filled with placeholders if missing)
   const secondary = visibleAccounts.slice(1, 5);
@@ -118,11 +135,18 @@ export default function Dashboard({ accounts = sampleAccounts, beneficiaries = s
 
       {/* Beneficiaries */}
       <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-3">Bénéficiaires / Amis</h2>
-        <p className="text-sm text-text-muted mb-4">Personnes à qui vous pouvez envoyer des Bonk rapidement.</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold mb-1">Bénéficiaires / Amis</h2>
+            <p className="text-sm text-text-muted">Personnes à qui vous pouvez envoyer des Bonk rapidement.</p>
+          </div>
+          <div>
+            <button onClick={() => setIsAddingBeneficiary(true)} className="rounded-full bg-primary px-3 py-1.5 text-sm font-medium text-white shadow-[0_0_35px_rgba(110,84,188,0.7)]">Ajouter</button>
+          </div>
+        </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          {beneficiaries.map((b) => (
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          {beneficiariesState.map((b) => (
             <div key={b.id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-surface/90 p-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 font-semibold text-primary">{b.name.charAt(0)}</div>
               <div className="flex-1">
