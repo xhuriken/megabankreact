@@ -1,5 +1,6 @@
 import "./App.css";
 import Home from "./pages/Home";
+import Login from "./components/Login";
 
 // Background tuning
 const BG_BLUR_CLASS = "blur-[2px]";     // this is the blur (change it too)
@@ -53,6 +54,8 @@ function App() {
           {/* Page content */}
           <main className="flex-1">
             <Home />
+            <Login />
+
           </main>
 
           {/* Footer TODO: put it in component and upgrade style */}
