@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import Account from "./Account";
-import AddBeneficiary from "./AddBeneficiary";
 
 // Sample mock data for demo. Replace with real data (props / API) as needed.
 const sampleAccounts = [
@@ -39,24 +38,15 @@ export default function Dashboard({ accounts = sampleAccounts, beneficiaries = s
   const [isAddingBeneficiary, setIsAddingBeneficiary] = useState(false);
   const [accountsState, setAccountsState] = useState(accounts);
   const [beneficiariesState, setBeneficiariesState] = useState(beneficiaries);
+  const [newName, setNewName] = useState("");
+  const [newIban, setNewIban] = useState("");
 
   // If an account is selected, show the account detail page
   if (selectedAccount) {
     return <Account account={selectedAccount} onBack={() => setSelectedAccount(null)} />;
   }
 
-  // If adding a beneficiary, show the add form
-  if (isAddingBeneficiary) {
-    return (
-      <AddBeneficiary
-        onBack={() => setIsAddingBeneficiary(false)}
-        onAdd={(b) => {
-          setBeneficiariesState((prev) => [b, ...prev]);
-          setIsAddingBeneficiary(false);
-        }}
-      />
-    );
-  }
+  // Modal form state and handlers are rendered inline below when `isAddingBeneficiary` is true.
 
   // ensure we show at least 1 and at most 5 accounts
   const visibleAccounts = (accountsState && accountsState.length > 0) ? accountsState.slice(0, 5) : sampleAccounts.slice(0, 1);
@@ -137,27 +127,80 @@ export default function Dashboard({ accounts = sampleAccounts, beneficiaries = s
       <div className="mt-8">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold mb-1">Bénéficiaires / Amis</h2>
+            <h2 className="text-xl font-semibold mb-1">Bénéficiaires</h2>
             <p className="text-sm text-text-muted">Personnes à qui vous pouvez envoyer des Bonk rapidement.</p>
           </div>
           <div>
-            <button onClick={() => setIsAddingBeneficiary(true)} className="rounded-full bg-primary px-3 py-1.5 text-sm font-medium text-white shadow-[0_0_35px_rgba(110,84,188,0.7)]">Ajouter</button>
+            <button
+              onClick={() => setIsAddingBeneficiary(true)}
+              className="rounded-full bg-primary px-3 py-1.5 text-sm font-medium text-white shadow-none transform transition-all duration-150 hover:scale-105 hover:shadow-[0_0_35px_rgba(110,84,188,0.7)] hover:brightness-100"
+            >
+              Ajouter
+            </button>
           </div>
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           {beneficiariesState.map((b) => (
-            <div key={b.id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-surface/90 p-3">
+            <div key={b.id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-surface/90 p-3 transform transition-transform duration-150 hover:scale-105">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 font-semibold text-primary">{b.name.charAt(0)}</div>
               <div className="flex-1">
                 <div className="font-semibold">{b.name}</div>
-                <div className="text-[12px] text-text-muted">{b.note} • <span className="text-primary">@{b.handle}</span></div>
               </div>
-              <button className="cursor-pointer rounded-full border border-white/10 bg-primary/80 px-3 py-1 text-xs text-white">Envoyer</button>
+              <button className="cursor-pointer rounded-full border border-white/10 bg-primary/80 px-3 py-1 text-xs text-white transform transition-all duration-150 hover:scale-105 hover:shadow-[0_0_35px_rgba(110,84,188,0.7)] hover:brightness-100">Envoyer</button>
             </div>
           ))}
         </div>
       </div>
+
+      {isAddingBeneficiary && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setIsAddingBeneficiary(false)} />
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const id = `b-${Date.now()}`;
+              const handle = newName ? newName.toLowerCase().replace(/\s+/g, "-") : `user-${Date.now()}`;
+              const newBenef = { id, name: newName || "Nouveau bénéficiaire", note: `IBAN: ${newIban || "-"}`, handle };
+              setBeneficiariesState((prev) => [newBenef, ...prev]);
+              setNewName("");
+              setNewIban("");
+              setIsAddingBeneficiary(false);
+            }}
+            className="relative z-10 w-full max-w-md rounded-xl border border-white/10 bg-surface/95 p-6 shadow-xl"
+          >
+            <h3 className="text-lg font-semibold mb-2">Ajouter un bénéficiaire</h3>
+            <p className="text-sm text-text-muted mb-4">Entrez le nom et l'IBAN du bénéficiaire.</p>
+
+            <label className="block text-sm mb-2">
+              <div className="text-xs text-text-muted mb-1">Nom</div>
+              <input
+                required
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                className="w-full rounded-md border border-white/10 bg-transparent px-3 py-2 text-sm"
+                placeholder="Ex: Jean Dupont"
+              />
+            </label>
+
+            <label className="block text-sm mb-4">
+              <div className="text-xs text-text-muted mb-1">IBAN</div>
+              <input
+                required
+                value={newIban}
+                onChange={(e) => setNewIban(e.target.value)}
+                className="w-full rounded-md border border-white/10 bg-transparent px-3 py-2 text-sm"
+                placeholder="FR76 3000 6000 0112 3456 7890 189"
+              />
+            </label>
+
+            <div className="flex justify-end gap-3">
+              <button type="button" onClick={() => setIsAddingBeneficiary(false)} className="rounded-md px-3 py-2 text-sm border border-white/10">Annuler</button>
+              <button type="submit" className="rounded-md bg-primary px-3 py-2 text-sm text-white">Ajouter</button>
+            </div>
+          </form>
+        </div>
+      )}
     </section>
   );
 }
