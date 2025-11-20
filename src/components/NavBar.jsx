@@ -1,12 +1,30 @@
 import React, { useState, useEffect} from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
+import * as userApi from "../api/user";
 
-export default function LoginPage() {
-
-    const {isConnected, logout} = useAuth();
-
+export default function NavBar() {
+  const {isConnected, logout} = useAuth();
+  const [user, setUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(false);
   const navigate = useNavigate();
+
+  // Load user info if connected
+  useEffect(() => {
+    if (isConnected) {
+      setLoadingUser(true);
+      userApi.getCurrentUser()
+        .then((data) => {
+          setUser(data);
+          setLoadingUser(false);
+        })
+        .catch((err) => {
+          console.error("Erreur lors de la récupération de l'utilisateur:", err);
+          setLoadingUser(false);
+        });
+    }
+  }, [isConnected]);
+
   //navigate and give isSignUp to auth page 
   const goToAuth = (isSignUp) => {
     navigate("/auth", {
@@ -41,6 +59,12 @@ export default function LoginPage() {
 
           {isConnected ? (
             <nav className="flex items-center gap-4 text-xs md:text-sm">
+              {loadingUser ? (
+                <span className="text-text-muted">Chargement...</span>
+              ) : user ? (
+                <span className="text-text-muted">Bienvenue {user.first_name} {user.last_name}</span>
+              ) : null}
+
               <button onClick={Logout} className="cursor-pointer rounded-full border border-white/10 px-3 py-1.5 text-xs font-medium text-text-muted backdrop-blur-sm transition-colors hover:border-primary-soft hover:text-text">
                 Déconnexion
               </button>
@@ -61,9 +85,9 @@ export default function LoginPage() {
 
 }
 
-              {/* <button className="cursor-pointer text-text-muted transition-colors hover:text-text">
+              /* <button className="cursor-pointer text-text-muted transition-colors hover:text-text">
                 test
               </button>
               <button className="cursor-pointer text-text-muted transition-colors hover:text-text">
                 Test
-              </button> */}
+              </button> */

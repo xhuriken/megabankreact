@@ -51,9 +51,10 @@ export async function registerUser({ firstName, lastName, email, password }) {
   });
 
   // Stock token in local Storage
-  //We'll need to change it later ?
+  //Do we need to change it later ?
 
   if (data.access_token) {
+    console.log("on set le token via le register :" , data.access_token)
     localStorage.setItem("accessToken", data.access_token);
   }
 
@@ -71,6 +72,7 @@ export async function loginUser({ email, password }) {
   });
 
   if (data.access_token) {
+    console.log("on set le  token via loginUser:", data.access_token)
     localStorage.setItem("accessToken", data.access_token);
   }
 

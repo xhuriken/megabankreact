@@ -51,7 +51,9 @@ export default function LoginRegister({ initialIsSignUp = false }) {
 
       console.log("Login success:", data);
       setInfo("Login successful.");
-      login();
+      // extract token from response (be permissive to different field names)
+      const token = data?.access_token;
+      login(token);
       // We redirect the user to /dashboard
       navigate("/dashboard");
 
@@ -81,7 +83,8 @@ export default function LoginRegister({ initialIsSignUp = false }) {
 
       console.log("Register success:", data);
       setInfo(`Account created for ${data.user?.email}.`);
-      login();
+      const token = data?.access_token
+      login(token);
       // Auto redirect
       navigate("/dashboard");
 
