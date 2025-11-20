@@ -1,4 +1,5 @@
 import React from "react";
+import TransactionsList from "../components/TransactionsList";
 
 function formatBalance(value) {
   return value.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -16,6 +17,13 @@ export default function Account({ account, onBack, onTransferClick }) {
     );
   }
 
+  const last = account.lastTransaction ?? {
+      type: "credit",
+      amount: 0,
+      date: "—",
+      label: "Aucune transaction",
+    };
+
   return (
     <section className="mx-auto max-w-4xl">
       {/* Back button */}
@@ -28,6 +36,7 @@ export default function Account({ account, onBack, onTransferClick }) {
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-semibold">{account.name}</h1>
+            <p className="text-sm text-text-muted">{account.iban}</p>
             <p className="text-sm text-text-muted mt-2">Détails de votre compte</p>
           </div>
         </div>
@@ -43,35 +52,24 @@ export default function Account({ account, onBack, onTransferClick }) {
 
         <div className="rounded-2xl border border-white/10 bg-surface/90 p-4">
           <div className="text-xs uppercase tracking-wide text-text-muted">Dernière transaction</div>
-          <div className={`mt-3 text-2xl font-semibold ${account.lastTransaction.type === "credit" ? "text-emerald-300" : "text-red-300"}`}>
-            {account.lastTransaction.type === "credit" ? "+" : "-"}{Math.abs(account.lastTransaction.amount).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} Ⓑ
+          <div className={`mt-3 text-2xl font-semibold ${last.type === "credit" ? "text-emerald-300" : "text-red-300"}`}>
+            {last.type === "credit" ? "+" : "-"}{Math.abs(last.amount).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} Ⓑ
           </div>
-          <div className="mt-2 text-xs text-text-muted capitalize">{account.lastTransaction.type}</div>
+          <div className="mt-2 text-xs text-text-muted capitalize">{last.type}</div>
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-surface/90 p-4">
           <div className="text-xs uppercase tracking-wide text-text-muted">Date</div>
-          <div className="mt-3 text-lg font-semibold">{account.lastTransaction.date}</div>
-          <div className="mt-2 text-xs text-text-muted">{account.lastTransaction.label}</div>
+          <div className="mt-3 text-lg font-semibold">{last.date}</div>
+          <div className="mt-2 text-xs text-text-muted">{last.label}</div>
         </div>
       </div>
 
       {/* Historique transactions (placeholder) */}
       <div className="rounded-2xl border border-white/10 bg-surface/90 p-6">
-        <h2 className="text-xl font-semibold mb-4">Historique des transactions</h2>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between rounded-xl border border-white/10 bg-surface/80 p-3">
-            <div>
-              <div className="font-semibold">{account.lastTransaction.label}</div>
-              <div className="text-xs text-text-muted">{account.lastTransaction.date}</div>
-            </div>
-            <div className={`text-lg font-semibold ${account.lastTransaction.type === "credit" ? "text-emerald-300" : "text-red-300"}`}>
-              {account.lastTransaction.type === "credit" ? "+" : "-"}{Math.abs(account.lastTransaction.amount).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} Ⓑ
-            </div>
-          </div>
-          <div className="text-center text-sm text-text-muted py-4">
-            Plus de transactions à venir...
-          </div>
+        <div className="rounded-2xl border border-white/10 bg-surface/90 p-6">
+          <h2 className="text-xl font-semibold mb-4">Historique des transactions</h2>
+          <TransactionsList iban={account.iban} />
         </div>
       </div>
 
