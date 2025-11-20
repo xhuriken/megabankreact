@@ -14,7 +14,7 @@ export default function Home() {
 
         {/* Head */}
         <div className="space-y-3">
-          <h1 className="text-3xl font-femboy leading-tight md:text-4xl">
+          <h1 className="text-3xl font-semibold leading-tight md:text-4xl">
             Level up ton argent
             <br />
             <span className="bg-gradient-to-r from-primary-soft via-primary to-secondary bg-clip-text text-transparent">

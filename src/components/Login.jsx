@@ -1,31 +1,41 @@
 import React, { useState, useEffect } from "react";
+
+async function getData() {
+  const url = "http://127.0.0.1:8000/auth/register";
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+    "Content-Type": "application/json",
+  },
+      body: JSON.stringify({
+  "email": "user@examyhfhrthrttggrfdsfdsfeple.com",
+  "password": "scaca",
+  "first_name": "strfezzing",
+  "last_name": "strzeffing"
+}),
+});
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
 export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const toggleForm = () => setIsSignUp(!isSignUp);
   
   const [data, setData] = useState('');
 
-  useEffect(() => {
-    // 1. Définir l'URL du backend
-    fetch('http://127.0.0.1:8000/docs#/auth/register_auth_register_post')
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Erreur réseau ou réponse non-OK');
-          }
-          return response.json(); // 2. Parser le corps de la réponse en JSON
-        })
-        .then(data => {
-          setData(data.message); // 3. Utiliser les données
-        })
-        .catch(error => {
-          console.error("Échec de la communication API :", error);
-          setData('Erreur de connexion.');
-        });
-    }, []);
 
   
     <div>
-      <p>Message reçu : {data}</p>
+      <p>Message reçu : {getData()}</p>
     </div>
   
 
