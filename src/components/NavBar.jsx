@@ -84,10 +84,3 @@ export default function NavBar() {
   );
 
 }
-
-              /* <button className="cursor-pointer text-text-muted transition-colors hover:text-text">
-                test
-              </button>
-              <button className="cursor-pointer text-text-muted transition-colors hover:text-text">
-                Test
-              </button> */

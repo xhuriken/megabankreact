@@ -4,7 +4,7 @@ function formatBalance(value) {
   return value.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export default function Account({ account, onBack }) {
+export default function Account({ account, onBack, onTransferClick }) {
   if (!account) {
     return (
       <section className="mx-auto max-w-4xl">
@@ -77,7 +77,10 @@ export default function Account({ account, onBack }) {
 
       {/* Actions */}
       <div className="mt-6 flex gap-3">
-        <button className="flex-1 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-white shadow-[0_0_35px_rgba(110,84,188,0.7)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_55px_rgba(110,84,188,1)]">
+        <button
+          onClick={() => onTransferClick && onTransferClick(account)}
+          className="flex-1 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-white shadow-[0_0_35px_rgba(110,84,188,0.7)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_55px_rgba(110,84,188,1)]"
+        >
           Envoyer de l'argent
         </button>
         <button className="flex-1 rounded-xl border border-white/10 bg-surface/90 px-4 py-3 text-sm font-medium text-text-muted backdrop-blur-sm transition-colors hover:border-primary-soft hover:text-text">

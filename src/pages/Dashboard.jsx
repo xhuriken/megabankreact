@@ -1,68 +1,220 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Account from "./Account";
-
-// Sample mock data for demo. Replace with real data (props / API) as needed.
-const sampleAccounts = [
-  {
-    id: "acc-1",
-    name: "Compte principal",
-    balance: 4280.5,
-    lastTransaction: { label: "Salaire", amount: 2100.0, type: "credit", date: "2025-11-01" },
-  },
-  {
-    id: "acc-2",
-    name: "Épargne",
-    balance: 1500.0,
-    lastTransaction: { label: "Virement vers Épargne", amount: 420.0, type: "credit", date: "2025-11-10" },
-  },
-  {
-    id: "acc-3",
-    name: "Voyages",
-    balance: 320.75,
-    lastTransaction: { label: "Courses", amount: -54.2, type: "debit", date: "2025-11-12" },
-  },
-];
+import { getAccounts, createAccount } from "../api/accounts";
+import { transferMoney } from "../api/transactions";
+import { useAuth } from "../AuthContext";
 
 const sampleBeneficiaries = [
   { id: "b-1", name: "Alice", note: "Amie", handle: "alice01" },
   { id: "b-2", name: "Bob", note: "Coloc", handle: "bob-room" },
   { id: "b-3", name: "Sophie Rain", note: "Maman", handle: "sophie-m" },
 ];
-
 function formatBalance(value) {
   return value.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export default function Dashboard({ accounts = sampleAccounts, beneficiaries = sampleBeneficiaries }) {
+export default function Dashboard() {
+  const { isConnected } = useAuth();
   const [selectedAccount, setSelectedAccount] = useState(null);
-  const [isAddingBeneficiary, setIsAddingBeneficiary] = useState(false);
-  const [accountsState, setAccountsState] = useState(accounts);
-  const [beneficiariesState, setBeneficiariesState] = useState(beneficiaries);
+  const [beneficiariesState, setBeneficiariesState] = useState(sampleBeneficiaries);
+
+  const [accountsState, setAccountsState] = useState([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(false);
+  const [accountsError, setAccountsError] = useState(null);
+  const [creatingAccount, setCreatingAccount] = useState(false);
+  const [transferModal, setTransferModal] = useState(null); // { beneficiary: obj } or { account: obj } or null
+  const [transferAmount, setTransferAmount] = useState("");
+  const [transferSourceIban, setTransferSourceIban] = useState("");
+  const [transferDestinationIban, setTransferDestinationIban] = useState("");
+  const [transferring, setTransferring] = useState(false);
+  const [transferError, setTransferError] = useState(null);
   const [newName, setNewName] = useState("");
   const [newIban, setNewIban] = useState("");
 
+  useEffect(() => {
+    // only fetch when user is connected
+    if (!isConnected) return;
+
+    setLoadingAccounts(true);
+    setAccountsError(null);
+    getAccounts()
+      .then((data) => {
+        // backend returns list of accounts matching AccountPublic schema
+        // adapt shape to what the Dashboard expects; preserve is_primary flag
+        const mapped = (data || []).map((a) => ({
+          id: a.iban || a.id,
+          name: a.iban || a.id || "Compte",
+          iban: a.iban,
+          balance: Number(a.balance ?? 0),
+          is_primary: Boolean(a.is_primary ?? a.isPrimary),
+          lastTransaction: a.last_transaction || a.lastTransaction || { label: "—", amount: 0, type: "credit", date: "" },
+        }));
+        setAccountsState(mapped);
+      })
+      .catch((err) => {
+        console.error("getAccounts error:", err);
+        setAccountsError(err.message || String(err));
+      })
+      .finally(() => setLoadingAccounts(false));
+
+    // beneficiaries are local for now (sample data)
+  }, [isConnected]);
+
   // If an account is selected, show the account detail page
   if (selectedAccount) {
-    return <Account account={selectedAccount} onBack={() => setSelectedAccount(null)} />;
+    return (
+      <Account
+        account={selectedAccount}
+        onBack={() => setSelectedAccount(null)}
+        onTransferClick={(account) => {
+          setTransferModal({ account, beneficiary: null });
+          setTransferAmount("");
+          setTransferSourceIban(account.iban);
+          setTransferError(null);
+        }}
+      />
+    );
   }
 
-  // Modal form state and handlers are rendered inline below when `isAddingBeneficiary` is true.
+  // simple handler to add a beneficiary locally (sample data)
+  const handleAddBeneficiary = () => {
+    const name = window.prompt("Nom du bénéficiaire (Prénom Nom)");
+    if (!name) return;
+    const note = window.prompt("Note (optionnel)") || "";
+    const handle = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    const id = `b-${Date.now()}`;
+    setBeneficiariesState((prev) => [{ id, name, note, handle }, ...prev]);
+  };
 
-  // ensure we show at least 1 and at most 5 accounts
-  const visibleAccounts = (accountsState && accountsState.length > 0) ? accountsState.slice(0, 5) : sampleAccounts.slice(0, 1);
-  const primary = visibleAccounts[0] || null;
-  // secondary accounts — up to 4 (slots will be filled with placeholders if missing)
-  const secondary = visibleAccounts.slice(1, 5);
+  // Open transfer modal for a beneficiary
+  const handleBeneficiaryTransfer = (beneficiary) => {
+    setTransferModal({ beneficiary });
+    setTransferAmount("");
+    setTransferSourceIban("");
+    setTransferError(null);
+  };
+
+  // Execute the transfer
+  const handleExecuteTransfer = async () => {
+    try {
+      let sourceIban = transferSourceIban;
+      let targetIban = transferDestinationIban;
+
+      // If transferring from account detail (source is pre-selected)
+      if (transferModal?.account) {
+        sourceIban = transferModal.account.iban;
+        if (!targetIban) {
+          setTransferError("Veuillez sélectionner un destinataire.");
+          return;
+        }
+      }
+      // If transferring to beneficiary
+      else if (transferModal?.beneficiary) {
+        if (!sourceIban) {
+          setTransferError("Veuillez sélectionner un compte source.");
+          return;
+        }
+        targetIban = transferModal.beneficiary.iban || `beneficiary-${transferModal.beneficiary.id}`;
+      }
+
+      if (!transferAmount) {
+        setTransferError("Veuillez entrer un montant.");
+        return;
+      }
+
+      const amount = parseFloat(transferAmount);
+      if (isNaN(amount) || amount <= 0) {
+        setTransferError("Montant invalide.");
+        return;
+      }
+
+      setTransferring(true);
+      setTransferError(null);
+
+      await transferMoney(sourceIban, targetIban, amount);
+
+      // Success: close modal and refresh accounts
+      setTransferModal(null);
+      setTransferAmount("");
+      setTransferSourceIban("");
+      setTransferDestinationIban("");
+
+      // Refresh accounts to get updated balances
+      getAccounts()
+        .then((data) => {
+          const mapped = (data || []).map((a) => ({
+            id: a.iban || a.id,
+            name: a.iban || a.id || "Compte",
+            iban: a.iban,
+            balance: Number(a.balance ?? 0),
+            is_primary: Boolean(a.is_primary ?? a.isPrimary),
+            lastTransaction: a.last_transaction || a.lastTransaction || { label: "—", amount: 0, type: "credit", date: "" },
+          }));
+          setAccountsState(mapped);
+        })
+        .catch((err) => console.error("refresh error:", err));
+    } catch (err) {
+      console.error("transfer error:", err);
+      setTransferError(err.message || String(err));
+    } finally {
+      setTransferring(false);
+    }
+  };
+
+  // Create an account via API and update local state
+  const handleCreateAccount = async (isPrimary = false) => {
+    try {
+      setCreatingAccount(true);
+      setAccountsError(null);
+      const payload = { is_primary: !!isPrimary };
+      const acc = await createAccount(payload);
+
+      // map backend account to UI shape
+      const newAcc = {
+        id: acc.iban || acc.id,
+        name: acc.iban || acc.id || "Compte",
+        iban: acc.iban,
+        balance: Number(acc.balance ?? 0),
+        is_primary: Boolean(acc.is_primary ?? acc.isPrimary),
+        lastTransaction: acc.last_transaction || acc.lastTransaction || { label: "—", amount: 0, type: "credit", date: "" },
+      };
+
+      setAccountsState((prev) => {
+        if (newAcc.is_primary) {
+          // ensure only this one is primary
+          const others = prev.map((p) => ({ ...p, is_primary: false }));
+          return [newAcc, ...others];
+        }
+        // append as a secondary account
+        return [...prev, newAcc];
+      });
+    } catch (err) {
+      console.error("createAccount error:", err);
+      setAccountsError(err.message || String(err));
+    } finally {
+      setCreatingAccount(false);
+    }
+  };
+
+  // Always render 5 slots: 1 primary + 4 secondary (placeholders shown if missing)
+  // Choose primary account flagged by backend (is_primary) if present
+  const primary = accountsState.find((a) => a.is_primary) || (accountsState.length > 0 ? accountsState[0] : null);
+  // secondary accounts — exclude the chosen primary, up to 4
+  const secondary = accountsState.filter((a) => a.iban !== primary?.iban).slice(0, 4);
   const slots = Array.from({ length: 4 }).map((_, i) => secondary[i] || null);
 
   return (
     <section className="mx-auto max-w-4xl">
       <h1 className="text-3xl font-semibold mb-2">Tableau de bord</h1>
-      <p className="text-text-muted mb-6">Vos comptes et vos bénéficiaires — envoyez des Bonk en un clic.</p>
+      <p className="text-text-muted mb-6">Vos comptes — envoyez des Bonk en un clic.</p>
 
       {/* Primary account (large, centered) */}
       <div className="flex justify-center mb-6">
-        {primary ? (
+        {loadingAccounts ? (
+          <div className="text-text-muted">Chargement des comptes...</div>
+        ) : accountsError ? (
+          <div className="text-red-400">Erreur: {accountsError}</div>
+        ) : primary ? (
           <article
             onClick={() => setSelectedAccount(primary)}
             className="w-full max-w-2xl rounded-3xl border border-white/10 bg-surface/95 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.65)] transform transition-transform duration-200 hover:-translate-y-1 cursor-pointer"
@@ -85,7 +237,13 @@ export default function Dashboard({ accounts = sampleAccounts, beneficiaries = s
         ) : (
           <article className="w-full max-w-2xl rounded-3xl border border-dashed border-white/10 bg-surface/90 p-6 text-center">
             <div className="text-sm text-text-muted">Aucun compte principal</div>
-            <button className="mt-3 rounded-full bg-primary px-4 py-2 text-white">Ouvrir un compte</button>
+            <button
+              onClick={() => handleCreateAccount(true)}
+              disabled={creatingAccount}
+              className="mt-3 rounded-full bg-primary px-4 py-2 text-white disabled:opacity-60"
+            >
+              {creatingAccount ? "Création..." : "Ouvrir un compte"}
+            </button>
           </article>
         )}
       </div>
@@ -95,7 +253,11 @@ export default function Dashboard({ accounts = sampleAccounts, beneficiaries = s
         {slots.map((acc, idx) => (
           <article
             key={idx}
-            className={`rounded-xl border border-white/10 bg-surface/90 p-4 text-sm transition-transform duration-200 hover:scale-105 hover:shadow-xl ${acc ? "" : "opacity-80"}`}>
+            onClick={() => acc && setSelectedAccount(acc)}
+            onKeyDown={(e) => { if (acc && (e.key === 'Enter' || e.key === ' ')) setSelectedAccount(acc); }}
+            role={acc ? 'button' : 'presentation'}
+            tabIndex={acc ? 0 : -1}
+            className={`rounded-xl border border-white/10 bg-surface/90 p-4 text-sm transition-transform duration-200 hover:scale-105 hover:shadow-xl ${acc ? "cursor-pointer" : "opacity-80"}`}>
             {acc ? (
               <div className="flex flex-col h-full justify-between">
                 <div>
@@ -116,7 +278,13 @@ export default function Dashboard({ accounts = sampleAccounts, beneficiaries = s
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <div className="text-sm text-text-muted">Emplacement vide</div>
                 <div className="mt-3 text-[12px] text-text-muted">Ouvrir un compte pour remplir cette carte.</div>
-                <button className="mt-4 rounded-full bg-primary px-3 py-1 text-xs text-white">Ouvrir</button>
+                <button
+                  onClick={() => handleCreateAccount(false)}
+                  disabled={creatingAccount}
+                  className="mt-4 rounded-full bg-primary px-3 py-1 text-xs text-white disabled:opacity-60"
+                >
+                  {creatingAccount ? "Création..." : "Ouvrir"}
+                </button>
               </div>
             )}
           </article>
@@ -132,7 +300,6 @@ export default function Dashboard({ accounts = sampleAccounts, beneficiaries = s
           </div>
           <div>
             <button
-              onClick={() => setIsAddingBeneficiary(true)}
               className="rounded-full bg-primary px-3 py-1.5 text-sm font-medium text-white shadow-none transform transition-all duration-150 hover:scale-105 hover:shadow-[0_0_35px_rgba(110,84,188,0.7)] hover:brightness-100"
             >
               Ajouter
@@ -147,60 +314,15 @@ export default function Dashboard({ accounts = sampleAccounts, beneficiaries = s
               <div className="flex-1">
                 <div className="font-semibold">{b.name}</div>
               </div>
-              <button className="cursor-pointer rounded-full border border-white/10 bg-primary/80 px-3 py-1 text-xs text-white transform transition-all duration-150 hover:scale-105 hover:shadow-[0_0_35px_rgba(110,84,188,0.7)] hover:brightness-100">Envoyer</button>
+              <button className="cursor-pointer rounded-full border border-white/10 bg-primary/80 px-3 py-1 text-xs text-white transform transition-all duration-150 hover:scale-105 hover:shadow-[0_0_35px_rgba(110,84,188,0.7)] hover:brightness-100">
+                Envoyer
+              </button>
             </div>
           ))}
         </div>
       </div>
 
-      {isAddingBeneficiary && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setIsAddingBeneficiary(false)} />
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const id = `b-${Date.now()}`;
-              const handle = newName ? newName.toLowerCase().replace(/\s+/g, "-") : `user-${Date.now()}`;
-              const newBenef = { id, name: newName || "Nouveau bénéficiaire", note: `IBAN: ${newIban || "-"}`, handle };
-              setBeneficiariesState((prev) => [newBenef, ...prev]);
-              setNewName("");
-              setNewIban("");
-              setIsAddingBeneficiary(false);
-            }}
-            className="relative z-10 w-full max-w-md rounded-xl border border-white/10 bg-surface/95 p-6 shadow-xl"
-          >
-            <h3 className="text-lg font-semibold mb-2">Ajouter un bénéficiaire</h3>
-            <p className="text-sm text-text-muted mb-4">Entrez le nom et l'IBAN du bénéficiaire.</p>
-
-            <label className="block text-sm mb-2">
-              <div className="text-xs text-text-muted mb-1">Nom</div>
-              <input
-                required
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                className="w-full rounded-md border border-white/10 bg-transparent px-3 py-2 text-sm"
-                placeholder="Ex: Jean Dupont"
-              />
-            </label>
-
-            <label className="block text-sm mb-4">
-              <div className="text-xs text-text-muted mb-1">IBAN</div>
-              <input
-                required
-                value={newIban}
-                onChange={(e) => setNewIban(e.target.value)}
-                className="w-full rounded-md border border-white/10 bg-transparent px-3 py-2 text-sm"
-                placeholder="FR76 3000 6000 0112 3456 7890 189"
-              />
-            </label>
-
-            <div className="flex justify-end gap-3">
-              <button type="button" onClick={() => setIsAddingBeneficiary(false)} className="rounded-md px-3 py-2 text-sm border border-white/10">Annuler</button>
-              <button type="submit" className="rounded-md bg-primary px-3 py-2 text-sm text-white">Ajouter</button>
-            </div>
-          </form>
-        </div>
-      )}
+      
     </section>
   );
 }
