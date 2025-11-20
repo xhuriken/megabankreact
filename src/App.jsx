@@ -3,7 +3,7 @@ import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Footer from "./components/Footer";
 import NavBar from "./components/NavBar";
-import Page2con from "./pages/Page2con";
+import Dashboard from "./pages/Dashboard";
 
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -41,7 +41,7 @@ function App() {
 
               {/* Auth */}
               <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard" element={<Page2con />} />
+              <Route path="/dashboard" element={<Dashboard />} />
             </Routes>
           </main>
           {/* Footer*/}
