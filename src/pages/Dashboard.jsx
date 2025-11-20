@@ -1,65 +1,71 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Account from "./Account";
-import AddBeneficiary from "./AddBeneficiary";
-
-// Sample mock data for demo. Replace with real data (props / API) as needed.
-const sampleAccounts = [
-  {
-    id: "acc-1",
-    name: "Compte principal",
-    balance: 4280.5,
-    lastTransaction: { label: "Salaire", amount: 2100.0, type: "credit", date: "2025-11-01" },
-  },
-  {
-    id: "acc-2",
-    name: "Épargne",
-    balance: 1500.0,
-    lastTransaction: { label: "Virement vers Épargne", amount: 420.0, type: "credit", date: "2025-11-10" },
-  },
-  {
-    id: "acc-3",
-    name: "Voyages",
-    balance: 320.75,
-    lastTransaction: { label: "Courses", amount: -54.2, type: "debit", date: "2025-11-12" },
-  },
-];
+import { getAccounts } from "../api/accounts";
+import { useAuth } from "../AuthContext";
 
 const sampleBeneficiaries = [
   { id: "b-1", name: "Alice", note: "Amie", handle: "alice01" },
   { id: "b-2", name: "Bob", note: "Coloc", handle: "bob-room" },
   { id: "b-3", name: "Sophie Rain", note: "Maman", handle: "sophie-m" },
 ];
-
 function formatBalance(value) {
   return value.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export default function Dashboard({ accounts = sampleAccounts, beneficiaries = sampleBeneficiaries }) {
+export default function Dashboard() {
+  const { isConnected } = useAuth();
   const [selectedAccount, setSelectedAccount] = useState(null);
-  const [isAddingBeneficiary, setIsAddingBeneficiary] = useState(false);
-  const [accountsState, setAccountsState] = useState(accounts);
-  const [beneficiariesState, setBeneficiariesState] = useState(beneficiaries);
+  const [beneficiariesState, setBeneficiariesState] = useState(sampleBeneficiaries);
+
+  const [accountsState, setAccountsState] = useState([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(false);
+  const [accountsError, setAccountsError] = useState(null);
+
+  useEffect(() => {
+    // only fetch when user is connected
+    if (!isConnected) return;
+
+    setLoadingAccounts(true);
+    setAccountsError(null);
+    getAccounts()
+      .then((data) => {
+        // backend returns list of accounts matching AccountPublic schema
+        // adapt shape to what the Dashboard expects
+        const mapped = (data || []).map((a) => ({
+          id: a.iban || a.id,
+          name: a.iban || "Compte",
+          iban: a.iban,
+          balance: Number(a.balance ?? 0),
+          lastTransaction: a.last_transaction || { label: "—", amount: 0, type: "credit", date: "" },
+        }));
+        setAccountsState(mapped);
+      })
+      .catch((err) => {
+        console.error("getAccounts error:", err);
+        setAccountsError(err.message || String(err));
+      })
+      .finally(() => setLoadingAccounts(false));
+
+    // beneficiaries are local for now (sample data)
+  }, [isConnected]);
 
   // If an account is selected, show the account detail page
   if (selectedAccount) {
     return <Account account={selectedAccount} onBack={() => setSelectedAccount(null)} />;
   }
 
-  // If adding a beneficiary, show the add form
-  if (isAddingBeneficiary) {
-    return (
-      <AddBeneficiary
-        onBack={() => setIsAddingBeneficiary(false)}
-        onAdd={(b) => {
-          setBeneficiariesState((prev) => [b, ...prev]);
-          setIsAddingBeneficiary(false);
-        }}
-      />
-    );
-  }
+  // simple handler to add a beneficiary locally (sample data)
+  const handleAddBeneficiary = () => {
+    const name = window.prompt("Nom du bénéficiaire (Prénom Nom)");
+    if (!name) return;
+    const note = window.prompt("Note (optionnel)") || "";
+    const handle = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    const id = `b-${Date.now()}`;
+    setBeneficiariesState((prev) => [{ id, name, note, handle }, ...prev]);
+  };
 
   // ensure we show at least 1 and at most 5 accounts
-  const visibleAccounts = (accountsState && accountsState.length > 0) ? accountsState.slice(0, 5) : sampleAccounts.slice(0, 1);
+  const visibleAccounts = (accountsState && accountsState.length > 0) ? accountsState.slice(0, 5) : [];
   const primary = visibleAccounts[0] || null;
   // secondary accounts — up to 4 (slots will be filled with placeholders if missing)
   const secondary = visibleAccounts.slice(1, 5);
@@ -68,11 +74,15 @@ export default function Dashboard({ accounts = sampleAccounts, beneficiaries = s
   return (
     <section className="mx-auto max-w-4xl">
       <h1 className="text-3xl font-semibold mb-2">Tableau de bord</h1>
-      <p className="text-text-muted mb-6">Vos comptes et vos bénéficiaires — envoyez des Bonk en un clic.</p>
+      <p className="text-text-muted mb-6">Vos comptes — envoyez des Bonk en un clic.</p>
 
       {/* Primary account (large, centered) */}
       <div className="flex justify-center mb-6">
-        {primary ? (
+        {loadingAccounts ? (
+          <div className="text-text-muted">Chargement des comptes...</div>
+        ) : accountsError ? (
+          <div className="text-red-400">Erreur: {accountsError}</div>
+        ) : primary ? (
           <article
             onClick={() => setSelectedAccount(primary)}
             className="w-full max-w-2xl rounded-3xl border border-white/10 bg-surface/95 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.65)] transform transition-transform duration-200 hover:-translate-y-1 cursor-pointer"
@@ -141,7 +151,7 @@ export default function Dashboard({ accounts = sampleAccounts, beneficiaries = s
             <p className="text-sm text-text-muted">Personnes à qui vous pouvez envoyer des Bonk rapidement.</p>
           </div>
           <div>
-            <button onClick={() => setIsAddingBeneficiary(true)} className="rounded-full bg-primary px-3 py-1.5 text-sm font-medium text-white shadow-[0_0_35px_rgba(110,84,188,0.7)]">Ajouter</button>
+            <button onClick={handleAddBeneficiary} className="rounded-full bg-primary px-3 py-1.5 text-sm font-medium text-white shadow-[0_0_35px_rgba(110,84,188,0.7)]">Ajouter</button>
           </div>
         </div>
 
