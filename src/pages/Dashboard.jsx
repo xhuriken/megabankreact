@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Account from "./Account";
 import { getAccounts, createAccount } from "../api/accounts";
+import { transferMoney } from "../api/transactions";
 import { useAuth } from "../AuthContext";
 
 const sampleBeneficiaries = [
@@ -21,6 +22,12 @@ export default function Dashboard() {
   const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [accountsError, setAccountsError] = useState(null);
   const [creatingAccount, setCreatingAccount] = useState(false);
+  const [transferModal, setTransferModal] = useState(null); // { beneficiary: obj } or { account: obj } or null
+  const [transferAmount, setTransferAmount] = useState("");
+  const [transferSourceIban, setTransferSourceIban] = useState("");
+  const [transferDestinationIban, setTransferDestinationIban] = useState("");
+  const [transferring, setTransferring] = useState(false);
+  const [transferError, setTransferError] = useState(null);
 
   useEffect(() => {
     // only fetch when user is connected
@@ -53,7 +60,18 @@ export default function Dashboard() {
 
   // If an account is selected, show the account detail page
   if (selectedAccount) {
-    return <Account account={selectedAccount} onBack={() => setSelectedAccount(null)} />;
+    return (
+      <Account
+        account={selectedAccount}
+        onBack={() => setSelectedAccount(null)}
+        onTransferClick={(account) => {
+          setTransferModal({ account, beneficiary: null });
+          setTransferAmount("");
+          setTransferSourceIban(account.iban);
+          setTransferError(null);
+        }}
+      />
+    );
   }
 
   // simple handler to add a beneficiary locally (sample data)
@@ -64,6 +82,81 @@ export default function Dashboard() {
     const handle = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
     const id = `b-${Date.now()}`;
     setBeneficiariesState((prev) => [{ id, name, note, handle }, ...prev]);
+  };
+
+  // Open transfer modal for a beneficiary
+  const handleBeneficiaryTransfer = (beneficiary) => {
+    setTransferModal({ beneficiary });
+    setTransferAmount("");
+    setTransferSourceIban("");
+    setTransferError(null);
+  };
+
+  // Execute the transfer
+  const handleExecuteTransfer = async () => {
+    try {
+      let sourceIban = transferSourceIban;
+      let targetIban = transferDestinationIban;
+
+      // If transferring from account detail (source is pre-selected)
+      if (transferModal?.account) {
+        sourceIban = transferModal.account.iban;
+        if (!targetIban) {
+          setTransferError("Veuillez sélectionner un destinataire.");
+          return;
+        }
+      }
+      // If transferring to beneficiary
+      else if (transferModal?.beneficiary) {
+        if (!sourceIban) {
+          setTransferError("Veuillez sélectionner un compte source.");
+          return;
+        }
+        targetIban = transferModal.beneficiary.iban || `beneficiary-${transferModal.beneficiary.id}`;
+      }
+
+      if (!transferAmount) {
+        setTransferError("Veuillez entrer un montant.");
+        return;
+      }
+
+      const amount = parseFloat(transferAmount);
+      if (isNaN(amount) || amount <= 0) {
+        setTransferError("Montant invalide.");
+        return;
+      }
+
+      setTransferring(true);
+      setTransferError(null);
+
+      await transferMoney(sourceIban, targetIban, amount);
+
+      // Success: close modal and refresh accounts
+      setTransferModal(null);
+      setTransferAmount("");
+      setTransferSourceIban("");
+      setTransferDestinationIban("");
+
+      // Refresh accounts to get updated balances
+      getAccounts()
+        .then((data) => {
+          const mapped = (data || []).map((a) => ({
+            id: a.iban || a.id,
+            name: a.iban || a.id || "Compte",
+            iban: a.iban,
+            balance: Number(a.balance ?? 0),
+            is_primary: Boolean(a.is_primary ?? a.isPrimary),
+            lastTransaction: a.last_transaction || a.lastTransaction || { label: "—", amount: 0, type: "credit", date: "" },
+          }));
+          setAccountsState(mapped);
+        })
+        .catch((err) => console.error("refresh error:", err));
+    } catch (err) {
+      console.error("transfer error:", err);
+      setTransferError(err.message || String(err));
+    } finally {
+      setTransferring(false);
+    }
   };
 
   // Create an account via API and update local state
@@ -216,11 +309,122 @@ export default function Dashboard() {
                 <div className="font-semibold">{b.name}</div>
                 <div className="text-[12px] text-text-muted">{b.note} • <span className="text-primary">@{b.handle}</span></div>
               </div>
-              <button className="cursor-pointer rounded-full border border-white/10 bg-primary/80 px-3 py-1 text-xs text-white">Envoyer</button>
+              <button
+                onClick={() => handleBeneficiaryTransfer(b)}
+                className="cursor-pointer rounded-full border border-white/10 bg-primary/80 px-3 py-1 text-xs text-white hover:bg-primary transition"
+              >
+                Envoyer
+              </button>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Transfer Modal */}
+      {transferModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <article className="bg-surface/95 rounded-3xl border border-white/10 p-6 max-w-md w-full mx-4">
+            <h2 className="text-2xl font-semibold mb-4">Envoyer de l'argent</h2>
+            
+            {transferError && (
+              <div className="mb-4 p-3 bg-red-700/30 text-red-300 rounded-lg text-sm">
+                {transferError}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {/* Destination info */}
+              <div>
+                <p className="text-sm text-text-muted mb-2">À:</p>
+                <div className="p-3 bg-surface/90 rounded-lg border border-white/10">
+                  {transferModal.beneficiary ? (
+                    <>
+                      <p className="font-semibold">{transferModal.beneficiary?.name}</p>
+                      <p className="text-xs text-text-muted">{transferModal.beneficiary?.note}</p>
+                    </>
+                  ) : transferModal.account ? (
+                    <>
+                      <p className="font-semibold">{transferModal.account?.name}</p>
+                      <p className="text-xs text-text-muted">{transferModal.account?.iban}</p>
+                    </>
+                  ) : null}
+                </div>
+              </div>
+
+              {/* Source account selection (only if transferring from beneficiary, not from account detail) */}
+              {transferModal.beneficiary && (
+                <div>
+                  <p className="text-sm text-text-muted mb-2">Compte source:</p>
+                  <select
+                    value={transferSourceIban}
+                    onChange={(e) => setTransferSourceIban(e.target.value)}
+                    className="w-full p-3 bg-surface/90 border border-white/10 rounded-lg text-text focus:border-primary outline-none"
+                  >
+                    <option value="">-- Choisir un compte --</option>
+                    {accountsState.map((acc) => (
+                      <option key={acc.iban} value={acc.iban}>
+                        {acc.name} ({formatBalance(acc.balance)} Ⓑ)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Destination account selection (only if transferring from account detail to another account/recipient) */}
+              {transferModal.account && !transferModal.beneficiary && (
+                <div>
+                  <p className="text-sm text-text-muted mb-2">Destinataire:</p>
+                  <select
+                    value={transferDestinationIban || ""}
+                    onChange={(e) => setTransferDestinationIban(e.target.value)}
+                    className="w-full p-3 bg-surface/90 border border-white/10 rounded-lg text-text focus:border-primary outline-none"
+                  >
+                    <option value="">-- Choisir un destinataire --</option>
+                    {accountsState
+                      .filter((acc) => acc.iban !== transferModal.account?.iban)
+                      .map((acc) => (
+                        <option key={acc.iban} value={acc.iban}>
+                          {acc.name} ({formatBalance(acc.balance)} Ⓑ)
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Amount input */}
+              <div>
+                <p className="text-sm text-text-muted mb-2">Montant (Ⓑ):</p>
+                <input
+                  type="number"
+                  value={transferAmount}
+                  onChange={(e) => setTransferAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full p-3 bg-surface/90 border border-white/10 rounded-lg text-text focus:border-primary outline-none"
+                  step="0.01"
+                  min="0"
+                />
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setTransferModal(null)}
+                  className="flex-1 px-4 py-2 rounded-full border border-white/10 text-text-muted hover:border-primary transition"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleExecuteTransfer}
+                  disabled={transferring}
+                  className="flex-1 px-4 py-2 rounded-full bg-primary text-white disabled:opacity-60 transition"
+                >
+                  {transferring ? "Envoi..." : "Envoyer"}
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+      )}
     </section>
   );
 }
