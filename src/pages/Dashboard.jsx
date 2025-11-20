@@ -102,19 +102,19 @@ export default function Dashboard() {
     }
   };
 
-  // Add beneficiary (simple prompt example)
-  const handleAddBeneficiary = async () => {
-    const name = window.prompt("Beneficiary name ?");
-    if (!name) return;
-    const iban = window.prompt("Beneficiary IBAN ?");
-    if (!iban) return;
-
+  // Add beneficiary 
+  const handleAddBeneficiary = async (payload) => {
+    if (!payload || (!payload.name && !payload.iban)) return;
+    setBeneficiariesError("");
     try {
-      const created = await createBeneficiary({ name, iban });
+      const created = await createBeneficiary({ name: payload.name, iban: payload.iban });
       setBeneficiaries((prev) => [created, ...prev]);
+      return created;
     } catch (err) {
       console.error("createBeneficiary error:", err);
-      alert(err.message || "Cannot create beneficiary");
+      const message = err.message || "Cannot create beneficiary";
+      setBeneficiariesError(message);
+      throw err;
     }
   };
 
