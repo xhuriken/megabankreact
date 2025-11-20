@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Account from "./Account";
-import { getAccounts } from "../api/accounts";
+import { getAccounts, createAccount } from "../api/accounts";
 import { useAuth } from "../AuthContext";
 
 const sampleBeneficiaries = [
@@ -20,6 +20,7 @@ export default function Dashboard() {
   const [accountsState, setAccountsState] = useState([]);
   const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [accountsError, setAccountsError] = useState(null);
+  const [creatingAccount, setCreatingAccount] = useState(false);
 
   useEffect(() => {
     // only fetch when user is connected
@@ -30,13 +31,14 @@ export default function Dashboard() {
     getAccounts()
       .then((data) => {
         // backend returns list of accounts matching AccountPublic schema
-        // adapt shape to what the Dashboard expects
+        // adapt shape to what the Dashboard expects; preserve is_primary flag
         const mapped = (data || []).map((a) => ({
           id: a.iban || a.id,
-          name: a.iban || "Compte",
+          name: a.iban || a.id || "Compte",
           iban: a.iban,
           balance: Number(a.balance ?? 0),
-          lastTransaction: a.last_transaction || { label: "—", amount: 0, type: "credit", date: "" },
+          is_primary: Boolean(a.is_primary ?? a.isPrimary),
+          lastTransaction: a.last_transaction || a.lastTransaction || { label: "—", amount: 0, type: "credit", date: "" },
         }));
         setAccountsState(mapped);
       })
@@ -64,11 +66,46 @@ export default function Dashboard() {
     setBeneficiariesState((prev) => [{ id, name, note, handle }, ...prev]);
   };
 
-  // ensure we show at least 1 and at most 5 accounts
-  const visibleAccounts = (accountsState && accountsState.length > 0) ? accountsState.slice(0, 5) : [];
-  const primary = visibleAccounts[0] || null;
-  // secondary accounts — up to 4 (slots will be filled with placeholders if missing)
-  const secondary = visibleAccounts.slice(1, 5);
+  // Create an account via API and update local state
+  const handleCreateAccount = async (isPrimary = false) => {
+    try {
+      setCreatingAccount(true);
+      setAccountsError(null);
+      const payload = { is_primary: !!isPrimary };
+      const acc = await createAccount(payload);
+
+      // map backend account to UI shape
+      const newAcc = {
+        id: acc.iban || acc.id,
+        name: acc.iban || acc.id || "Compte",
+        iban: acc.iban,
+        balance: Number(acc.balance ?? 0),
+        is_primary: Boolean(acc.is_primary ?? acc.isPrimary),
+        lastTransaction: acc.last_transaction || acc.lastTransaction || { label: "—", amount: 0, type: "credit", date: "" },
+      };
+
+      setAccountsState((prev) => {
+        if (newAcc.is_primary) {
+          // ensure only this one is primary
+          const others = prev.map((p) => ({ ...p, is_primary: false }));
+          return [newAcc, ...others];
+        }
+        // append as a secondary account
+        return [...prev, newAcc];
+      });
+    } catch (err) {
+      console.error("createAccount error:", err);
+      setAccountsError(err.message || String(err));
+    } finally {
+      setCreatingAccount(false);
+    }
+  };
+
+  // Always render 5 slots: 1 primary + 4 secondary (placeholders shown if missing)
+  // Choose primary account flagged by backend (is_primary) if present
+  const primary = accountsState.find((a) => a.is_primary) || (accountsState.length > 0 ? accountsState[0] : null);
+  // secondary accounts — exclude the chosen primary, up to 4
+  const secondary = accountsState.filter((a) => a.iban !== primary?.iban).slice(0, 4);
   const slots = Array.from({ length: 4 }).map((_, i) => secondary[i] || null);
 
   return (
@@ -105,7 +142,13 @@ export default function Dashboard() {
         ) : (
           <article className="w-full max-w-2xl rounded-3xl border border-dashed border-white/10 bg-surface/90 p-6 text-center">
             <div className="text-sm text-text-muted">Aucun compte principal</div>
-            <button className="mt-3 rounded-full bg-primary px-4 py-2 text-white">Ouvrir un compte</button>
+            <button
+              onClick={() => handleCreateAccount(true)}
+              disabled={creatingAccount}
+              className="mt-3 rounded-full bg-primary px-4 py-2 text-white disabled:opacity-60"
+            >
+              {creatingAccount ? "Création..." : "Ouvrir un compte"}
+            </button>
           </article>
         )}
       </div>
@@ -115,7 +158,11 @@ export default function Dashboard() {
         {slots.map((acc, idx) => (
           <article
             key={idx}
-            className={`rounded-xl border border-white/10 bg-surface/90 p-4 text-sm transition-transform duration-200 hover:scale-105 hover:shadow-xl ${acc ? "" : "opacity-80"}`}>
+            onClick={() => acc && setSelectedAccount(acc)}
+            onKeyDown={(e) => { if (acc && (e.key === 'Enter' || e.key === ' ')) setSelectedAccount(acc); }}
+            role={acc ? 'button' : 'presentation'}
+            tabIndex={acc ? 0 : -1}
+            className={`rounded-xl border border-white/10 bg-surface/90 p-4 text-sm transition-transform duration-200 hover:scale-105 hover:shadow-xl ${acc ? "cursor-pointer" : "opacity-80"}`}>
             {acc ? (
               <div className="flex flex-col h-full justify-between">
                 <div>
@@ -136,7 +183,13 @@ export default function Dashboard() {
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <div className="text-sm text-text-muted">Emplacement vide</div>
                 <div className="mt-3 text-[12px] text-text-muted">Ouvrir un compte pour remplir cette carte.</div>
-                <button className="mt-4 rounded-full bg-primary px-3 py-1 text-xs text-white">Ouvrir</button>
+                <button
+                  onClick={() => handleCreateAccount(false)}
+                  disabled={creatingAccount}
+                  className="mt-4 rounded-full bg-primary px-3 py-1 text-xs text-white disabled:opacity-60"
+                >
+                  {creatingAccount ? "Création..." : "Ouvrir"}
+                </button>
               </div>
             )}
           </article>
