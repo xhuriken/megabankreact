@@ -3,6 +3,7 @@ import Home from "./pages/Home";
 import Login from "./components/Login";
 import Footer from "./components/Footer";
 import NavBar from "./components/NavBar";
+import FloatingImage from "./components/FloatingImage.jsx";
 
 // Background tuning
 const BG_BLUR_CLASS = "blur-[2px]";     // this is the blur (change it too)
@@ -33,6 +34,7 @@ function App() {
           <main className="flex-1">
             <Home />
             <Login />
+            <FloatingImage />
 
           </main>
 
