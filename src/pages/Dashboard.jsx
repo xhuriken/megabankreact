@@ -137,8 +137,15 @@ export default function Dashboard() {
     return (
       <Account
         account={selectedAccount}
-        onBack={() => setSelectedAccount(null)}
-      />
+        onBack={(deletedIban) => {
+        setSelectedAccount(null);
+
+      if (deletedIban) {
+        setAccounts((prev) => prev.filter((a) => a.iban !== deletedIban));
+    }
+  }}
+/>
+
     );
   }
 

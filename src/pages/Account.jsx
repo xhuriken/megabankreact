@@ -1,5 +1,6 @@
 import React from "react";
 import TransactionsList from "../components/TransactionsList";
+import { closeAccount } from "../api/accounts";
 
 function formatBalance(value) {
   return value.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -17,15 +18,28 @@ export default function Account({ account, onBack, onTransferClick }) {
     );
   }
 
+
+  async function handleDeleteAccount() {
+    if (!window.confirm("Voulez-vous vraiment supprimer ce compte ?")) return;
+
+    try {
+      await closeAccount(account.iban);   
+      onBack();                           
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
   const last = account.lastTransaction ?? {
-      type: "credit",
-      amount: 0,
-      date: "—",
-      label: "Aucune transaction",
-    };
+    type: "credit",
+    amount: 0,
+    date: "—",
+    label: "Aucune transaction",
+  };
 
   return (
     <section className="mx-auto max-w-4xl">
+
       {/* Back button */}
       <button onClick={onBack} className="mb-6 rounded-full border border-white/10 px-4 py-2 text-sm text-text-muted hover:text-text transition-colors">
         ← Retour au tableau de bord
@@ -65,7 +79,7 @@ export default function Account({ account, onBack, onTransferClick }) {
         </div>
       </div>
 
-      {/* Historique transactions (placeholder) */}
+      {/* Historique transactions */}
       <div className="rounded-2xl border border-white/10 bg-surface/90 p-6">
         <div className="rounded-2xl border border-white/10 bg-surface/90 p-6">
           <h2 className="text-xl font-semibold mb-4">Historique des transactions</h2>
@@ -74,17 +88,38 @@ export default function Account({ account, onBack, onTransferClick }) {
       </div>
 
       {/* Actions */}
-      <div className="mt-6 flex gap-3">
-        <button
-          onClick={() => onTransferClick && onTransferClick(account)}
-          className="flex-1 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-white shadow-[0_0_35px_rgba(110,84,188,0.7)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_55px_rgba(110,84,188,1)]"
-        >
-          Envoyer de l'argent
-        </button>
-        <button className="flex-1 rounded-xl border border-white/10 bg-surface/90 px-4 py-3 text-sm font-medium text-text-muted backdrop-blur-sm transition-colors hover:border-primary-soft hover:text-text">
-          Paramètres du compte
-        </button>
-      </div>
+<div className="mt-6 flex gap-3">
+  <button
+    onClick={() => onTransferClick && onTransferClick(account)}
+    className="flex-1 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-white shadow-[0_0_35px_rgba(110,84,188,0.7)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_55px_rgba(110,84,188,1)]"
+  >
+    Envoyer de l'argent
+  </button>
+
+  {/* del button for primary account*/}
+  {!account.is_primary && (
+    <button
+      onClick={async () => {
+        const ok = window.confirm("Êtes-vous sûr de vouloir supprimer ce compte ?");
+        if (!ok) return;
+
+        try {
+          await closeAccount(account.iban);
+          alert("Compte supprimé !");
+          
+          if (onBack) onBack(account.iban);
+        } catch (err) {
+          console.error(err);
+          alert(err.message || "Erreur lors de la suppression du compte.");
+        }
+      }}
+      className="flex-1 rounded-xl border border-white/10 bg-surface/90 px-4 py-3 text-sm font-medium text-text-muted backdrop-blur-sm transition-colors hover:border-primary-soft hover:text-text"
+    >
+      Supprimer le compte
+    </button>
+  )}
+</div>
+
     </section>
   );
 }
