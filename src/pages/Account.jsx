@@ -4,6 +4,7 @@ import DepositModal from "../components/modals/DepositModal";
 import { getAccounts } from "../api/accounts";
 import { useState } from "react";
 
+import { closeAccount } from "../api/accounts";
 
 function formatBalance(value) {
   return value.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -15,7 +16,8 @@ export default function Account({ account, onBack, onTransferClick }) {
 
 
 
-  function closeModal(){
+  function closeModal() {
+    window.location.reload();
     setModalInfo(null);
   }
 
@@ -29,6 +31,18 @@ export default function Account({ account, onBack, onTransferClick }) {
         <div className="text-center text-text-muted">Aucun compte sélectionné.</div>
       </section>
     );
+  }
+
+
+  async function handleDeleteAccount() {
+    if (!window.confirm("Voulez-vous vraiment supprimer ce compte ?")) return;
+
+    try {
+      await closeAccount(account.iban);
+      onBack();
+    } catch (err) {
+      alert(err.message);
+    }
   }
 
   const last = account.lastTransaction ?? {
@@ -80,7 +94,7 @@ export default function Account({ account, onBack, onTransferClick }) {
           </div>
         </div>
 
-        {/* Historique transactions (placeholder) */}
+        {/* Historique transactions */}
         <div className="rounded-2xl border border-white/10 bg-surface/90 p-6">
           <div className="rounded-2xl border border-white/10 bg-surface/90 p-6">
             <h2 className="text-xl font-semibold mb-4">Historique des transactions</h2>
@@ -100,9 +114,28 @@ export default function Account({ account, onBack, onTransferClick }) {
           >
             Envoyer de l'argent
           </button>
-          <button className="flex-1 rounded-xl border border-white/10 bg-surface/90 px-4 py-3 text-sm font-medium text-text-muted backdrop-blur-sm transition-colors hover:border-primary-soft hover:text-text">
-            Paramètres du compte
-          </button>
+          {/* del button for primary account*/}
+          {!account.is_primary && (
+            <button
+              onClick={async () => {
+                const ok = window.confirm("Êtes-vous sûr de vouloir supprimer ce compte ?");
+                if (!ok) return;
+
+                try {
+                  await closeAccount(account.iban);
+                  alert("Compte supprimé !");
+
+                  if (onBack) onBack(account.iban);
+                } catch (err) {
+                  console.error(err);
+                  alert(err.message || "Erreur lors de la suppression du compte.");
+                }
+              }}
+              className="flex-1 rounded-xl border border-white/10 bg-surface/90 px-4 py-3 text-sm font-medium text-text-muted backdrop-blur-sm transition-colors hover:border-primary-soft hover:text-text"
+            >
+              Supprimer le compte
+            </button>
+          )}
         </div>
       </section>
       {/* Modal */}
@@ -114,5 +147,4 @@ export default function Account({ account, onBack, onTransferClick }) {
       )}
     </>
   );
-
 }

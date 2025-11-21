@@ -4,6 +4,7 @@ import { depositMoney } from "../../api/transactions";
 export default function DepositModal({ iban, onClose }) {
     const [amount, setAmount] = useState("");
     const [loading, setLoading] = useState(false);
+    
 
     async function handleSubmit(e) {
         e.preventDefault();

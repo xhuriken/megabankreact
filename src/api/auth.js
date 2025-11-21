@@ -1,14 +1,15 @@
 // src/api/auth.js
 
-const API_URL = "http://127.0.0.1:8000"; 
+const API_URL = "http://127.0.0.1:8000"; //fast api
 
 // Fetch helper !
 async function apiFetch(path, options = {}) {
   const response = await fetch(`${API_URL}${path}`, {
-    // We spread options so we can pass method, body, headers, etc.
+    // We spread options so we can pass method, body, vars
     ...options,
     headers: {
-      // This header tells the server we are sending JSON.
+      // This header tells the server we sending json
+      // we spread header too (always put app/json, but custom header if the user put it too)
       "Content-Type": "application/json",
       ...(options.headers || {}),
     },
@@ -21,9 +22,9 @@ async function apiFetch(path, options = {}) {
   if (!response.ok) {
     // error msg
     const message =
-      data?.detail ||
-      data?.message ||
-      `Request failed : ${response.status}`;
+                    data?.detail ||
+                    data?.message ||
+                    `Request failed : ${response.status}`;
 
     const error = new Error(message);
     error.status = response.status;
