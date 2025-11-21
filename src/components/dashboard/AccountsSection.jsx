@@ -29,9 +29,42 @@ export default function AccountsSection({ onSelectAccount }) {
     fetchAccounts();
   }, []);
 
-  const primary = accounts.find(a => a.is_primary) || (accounts.length > 0 ? accounts[0] : null);
-  const secondary = primary == null ? accounts : accounts.filter(a => a.iban !== primary.iban).slice(0, 4);
-  const slots = Array.from({ length: 4 }).map((_, i) => secondary[i] || null);
+  //try to find the primary account
+  const foundPrimary = accounts.find(a => a.is_primary);
+
+  //If not primary we take first account if list not empty
+  let primary;
+  if (foundPrimary) {
+
+    primary = foundPrimary;
+  } else if (accounts.length > 0) {
+    primary = accounts[0];
+  } else {
+    primary = null; // no account at all (token exprirer)
+  }
+
+  //build the secondary accounts list
+  let secondary;
+
+  if (primary == null) {
+    // If no primary, secondary is just all accounts (normally this will never happend)
+    secondary = accounts;
+  } else {
+    // We remove the primary from the list (for the front)
+    // we want THE primary, and all others
+    const accountsWithoutPrimary = accounts.filter(a => a.iban !== primary.iban);
+
+    // We keep max 4 accounts for secondary
+    secondary = accountsWithoutPrimary.slice(0, 4);
+  }
+
+  //Create exactly 4 slots (account or null) because 5 acc max, and 1 is the primary
+  const emptySlots = Array.from({ length: 4 });
+
+  // For each slot, we put secondary[i] if exist, else null
+  const slots = emptySlots.map((_, i) => {
+    return secondary[i] || null;
+  });
 
   return (
     <>
