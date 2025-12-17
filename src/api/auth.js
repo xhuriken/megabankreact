@@ -1,6 +1,6 @@
 // src/api/auth.js
 
-const API_URL = "http://127.0.0.1:8000"; //fast api
+const API_URL = "http://localhost:8000"; //fast api
 
 // Fetch helper !
 async function apiFetch(path, options = {}) {
